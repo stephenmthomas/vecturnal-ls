@@ -113,13 +113,13 @@ input[type=checkbox]{accent-color:var(--accent)}
       <div class="dot"></div>Animate<span class="chevron open">▾</span>
     </div>
     <div class="section-body">
-      <div class="toggle-row"><input type="checkbox" id="cb-anim"><label for="cb-anim">Enable animation</label></div>
+      <div class="toggle-row"><input type="checkbox" id="cb-anim" checked><label for="cb-anim">Enable animation</label></div>
       <div class="seg" id="seg-anim">
-        <button class="active" data-v="drift" style="min-width:30%">Drift</button>
+        <button data-v="drift" style="min-width:30%">Drift</button>
         <button data-v="morph" style="min-width:30%">Morph</button>
-        <button data-v="both" style="min-width:30%">Both</button>
+        <button class="active" data-v="both" style="min-width:30%">Both</button>
       </div>
-      <div class="row"><span class="ctrl-label" title="Animation duration in seconds">Spd</span><input type="range" id="r-adur" min="1" max="240" value="20" step="0.5"><span class="val" id="v-adur">20.0s</span></div>
+      <div class="row"><span class="ctrl-label" title="Animation duration in seconds">Spd</span><input type="range" id="r-adur" min="1" max="240" value="12.5" step="0.5"><span class="val" id="v-adur">12.5s</span></div>
       <div class="row"><span class="ctrl-label" title="Vertical drift amount (px)">Dft</span><input type="range" id="r-adrift" min="1" max="60" value="10" step="1"><span class="val" id="v-adrift">10</span></div>
       <div class="row"><span class="ctrl-label" title="Stagger delay between layers (ms)">Stg</span><input type="range" id="r-astag" min="0" max="200" value="40" step="5"><span class="val" id="v-astag">40ms</span></div>
       <div class="row"><span class="ctrl-label" title="Morph noise offset (how different the morph target is)">Mor</span><input type="range" id="r-amorph" min="0.1" max="5" value="1" step="0.1"><span class="val" id="v-amorph">1.0</span></div>
