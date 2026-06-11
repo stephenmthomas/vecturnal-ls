@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vecturnal - Landscapes</title>
+<style>
+:root{--bg-primary:#ffffff;--bg-secondary:#f4f4f2;--bg-tertiary:#ebebea;--text-primary:#1a1a18;--text-secondary:#6b6b66;--text-tertiary:#9b9b96;--border-subtle:rgba(0,0,0,0.10);--border-medium:rgba(0,0,0,0.18);--accent:#414ac8;--accent-hover:#3537b0;--accent-subtle:rgba(90,65,200,0.09);--radius-sm:0px;--radius-md:0px;--radius-lg:0px}
+[data-theme="dark"]{--bg-primary:#1c1c1a;--bg-secondary:#252523;--bg-tertiary:#2e2e2b;--text-primary:#f0efec;--text-secondary:#9b9b96;--text-tertiary:#6b6b66;--border-subtle:rgba(255,255,255,0.08);--border-medium:rgba(255,255,255,0.14);--accent:#5a66d4;--accent-hover:#6b73e0;--accent-subtle:rgba(102,90,212,0.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-tertiary);color:var(--text-primary);font-size:13px;transition:background .2s,color .2s}
+.app{height:100vh;display:grid;grid-template-columns:260px 1fr;grid-template-rows:100vh}
+.panel{overflow-y:scroll;background:var(--bg-secondary);border-right:0.5px solid var(--border-subtle);padding:12px;display:flex;flex-direction:column;gap:10px}
+.panel-title{font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--text-tertiary);padding:4px 2px 2px;text-transform:uppercase}
+.canvas-area{display:flex;flex-direction:column;background:var(--bg-primary);transition:background .2s}
+.canvas-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:0.5px solid var(--border-subtle);flex-shrink:0}
+.canvas-toolbar button{padding:4px 10px;font-size:12px;border:0.5px solid var(--border-medium);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;transition:background .15s}
+.canvas-toolbar button:hover{background:var(--bg-tertiary)}
+.gen-btn{background:var(--accent)!important;color:#fff!important;border-color:transparent!important;font-weight:500}
+.gen-btn:hover{background:var(--accent-hover)!important}
+.theme-btn{width:30px;height:30px;padding:0!important;display:flex;align-items:center;justify-content:center;font-size:15px}
+#svg-canvas{flex:1;width:100%;display:block}
+#canvas-info{font-size:11px;color:var(--text-tertiary)}
+.section{border:0.5px solid var(--border-subtle);border-radius:var(--radius-md)}
+.section-header{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg-primary);cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);user-select:none;transition:background .15s}
+.section-header:hover{background:var(--bg-tertiary)}
+.section-header .chevron{margin-left:auto;font-size:10px;color:var(--text-tertiary);transition:transform .15s}
+.section-header .chevron.open{transform:rotate(180deg)}
+.section-body{padding:10px;display:flex;flex-direction:column;gap:8px;border-top:0.5px solid var(--border-subtle);background:var(--bg-secondary)}
+.section-body.collapsed{display:none}
+.section-header .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.row{display:flex;align-items:center;gap:6px}
+input[type=number]{width:52px;font-size:12px;padding:3px 5px;border:0.5px solid var(--border-medium);border-radius:var(--radius-sm);background:var(--bg-primary);color:var(--text-primary);outline:none}
+input[type=number]:focus{border-color:var(--accent)}
+input[type=range]{flex:1;min-width:100px;accent-color:var(--accent)}
+input[type=text]{flex:1;font-size:12px;padding:3px 5px;border:0.5px solid var(--border-medium);border-radius:var(--radius-sm);background:var(--bg-primary);color:var(--text-primary);outline:none}
+input[type=text]:focus{border-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.val{font-size:11px;color:var(--text-tertiary);min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.ctrl-label{font-size:11px;color:var(--text-secondary);min-width:20px}
+.seg{display:flex;gap:2px;flex-wrap:wrap}
+.seg button{font-size:11px;padding:2px 7px;border:0.5px solid var(--border-medium);border-radius:var(--radius-sm);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
+.seg button:hover{background:var(--bg-tertiary)}
+.seg button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.palette-row{display:flex;gap:5px;flex-wrap:wrap}
+.pal-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .1s,border-color .1s}
+.pal-btn:hover{transform:scale(1.15)}
+.pal-btn.active{border-color:var(--accent)}
+.toggle-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary)}
+.color-pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.color-item{display:flex;flex-direction:column;gap:3px}
+.color-item span{font-size:10px;color:var(--text-tertiary)}
+.color-item input[type=color]{width:100%;height:24px;border:0.5px solid var(--border-medium);border-radius:var(--radius-sm);background:var(--bg-primary);padding:1px;cursor:pointer}
+.panel::-webkit-scrollbar{width:5px}
+.panel::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb{background:var(--border-medium);border-radius:3px}
+#seed-display{font-size:11px;color:var(--text-tertiary);margin-left:auto}
+</style>
+</head>
+<body>
+<div class="app" id="root">
+<div class="panel">
+  <div class="panel-title">Terrain Generator</div>
+
+  <div class="toggle-row">
+    <input type="checkbox" id="cb-live" checked>
+    <label for="cb-live">Live preview</label>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Layers<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="row"><span class="ctrl-label" title="Layer Count">C</span><input type="range" id="r-layers" min="2" max="400" value="80" step="1"><span class="val" id="v-layers">80</span></div>
+      <div class="row"><span class="ctrl-label" title="Spacing">S</span><input type="range" id="r-spacing" min="0.1" max="5" value="1" step="0.1"><span class="val" id="v-spacing">1.0×</span></div>
+      <div class="row"><span class="ctrl-label" title="Vertical Offset">VO</span><input type="range" id="r-voffset" min="0.05" max="0.95" value="0.55" step="0.01"><span class="val" id="v-voffset">0.55</span></div>
+    </div>
+    <div class="section-body">
+      <div class="row"><span class="ctrl-label" title="Stroke Weight">Sw</span><input type="range" id="r-stroke" min="0.25" max="100" value="2" step="0.1"><span class="val" id="v-stroke">2.0</span></div>
+      <div class="toggle-row"><input type="checkbox" id="cb-fill" checked><label for="cb-fill">Fill</label></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Terrain<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="row"><span class="ctrl-label" title="Roughness">R</span><input type="range" id="r-rough" min="0.01" max="6.0" value="0.55" step="0.01"><span class="val" id="v-rough">0.55</span></div>
+      <div class="row"><span class="ctrl-label" title="Scale X">SX</span><input type="range" id="r-scalex" min="0.05" max="12" value="2.8" step="0.05"><span class="val" id="v-scalex">2.8</span></div>
+      <div class="row"><span class="ctrl-label" title="Octaves">O</span><input type="range" id="r-octaves" min="1" max="8" value="5" step="1"><span class="val" id="v-octaves">5</span></div>
+      <div class="row"><span class="ctrl-label" title="Persistence">P</span><input type="range" id="r-persist" min="0.1" max="0.9" value="0.5" step="0.01"><span class="val" id="v-persist">0.50</span></div>
+      <div class="row"><span class="ctrl-label" title="Depth spread">DS</span><input type="range" id="r-spread" min="0.1" max="1.5" value="0.7" step="0.01"><span class="val" id="v-spread">0.70</span></div>
+      <div class="row"><span class="ctrl-label" title="Horizon tilt">HT</span><input type="range" id="r-tilt" min="-1.0" max="1.0" value="0" step="0.01"><span class="val" id="v-tilt">0.00</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Voids<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="row"><span class="ctrl-label" title="Number of void columns">N</span><input type="range" id="r-voids" min="0" max="6" value="0" step="1"><span class="val" id="v-voids">0</span></div>
+      <div class="row"><span class="ctrl-label" title="Void width (sigma)">W</span><input type="range" id="r-vwidth" min="0.01" max="0.4" value="0.08" step="0.01"><span class="val" id="v-vwidth">0.08</span></div>
+      <div class="row"><span class="ctrl-label" title="X walk — horizontal snake per layer">XW</span><input type="range" id="r-vxwalk" min="0" max="0.3" value="0.01" step="0.001"><span class="val" id="v-vxwalk">0.01</span></div>
+      <div class="row"><span class="ctrl-label" title="Y walk — floor depth fluctuation per layer">YW</span><input type="range" id="r-vywalk" min="0" max="0.05" value="0.005" step="0.001"><span class="val" id="v-vywalk">0.005</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Animate<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="toggle-row"><input type="checkbox" id="cb-anim"><label for="cb-anim">Enable animation</label></div>
+      <div class="seg" id="seg-anim">
+        <button class="active" data-v="drift" style="min-width:30%">Drift</button>
+        <button data-v="morph" style="min-width:30%">Morph</button>
+        <button data-v="both" style="min-width:30%">Both</button>
+      </div>
+      <div class="row"><span class="ctrl-label" title="Animation duration in seconds">Spd</span><input type="range" id="r-adur" min="1" max="240" value="20" step="0.5"><span class="val" id="v-adur">20.0s</span></div>
+      <div class="row"><span class="ctrl-label" title="Vertical drift amount (px)">Dft</span><input type="range" id="r-adrift" min="1" max="60" value="10" step="1"><span class="val" id="v-adrift">10</span></div>
+      <div class="row"><span class="ctrl-label" title="Stagger delay between layers (ms)">Stg</span><input type="range" id="r-astag" min="0" max="200" value="40" step="5"><span class="val" id="v-astag">40ms</span></div>
+      <div class="row"><span class="ctrl-label" title="Morph noise offset (how different the morph target is)">Mor</span><input type="range" id="r-amorph" min="0.1" max="5" value="1" step="0.1"><span class="val" id="v-amorph">1.0</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Color<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="palette-row" id="palette-swatches"></div>
+      <div class="color-pair">
+        <div class="color-item"><span>Sky</span><input type="color" id="c-sky" value="#ffd0a0"></div>
+        <div class="color-item"><span>Fog-Occlusion</span><input type="color" id="c-fog" value="#ffb07a"></div>
+        <div class="color-item"><span>Distant Terrain</span><input type="color" id="c-distant" value="#3a0a14"></div>
+        <div class="color-item"><span>Near Terrain</span><input type="color" id="c-near" value="#cc3322"></div>
+      </div>
+      <div class="seg" id="seg-grad">
+        <button class="active" data-v="fill" style="min-width:30%">Flat</button>
+        <button data-v="vert" style="min-width:30%">Atmospheric</button>
+        <button data-v="radial" style="min-width:30%">Radial</button>
+      </div>
+      <div class="row"><span class="ctrl-label" title="Opacity (Alpha)">A</span><input type="range" id="r-opac" min="0.3" max="1" value="0.92" step="0.01"><span class="val" id="v-opac">0.92</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Canvas<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="row"><span class="ctrl-label" title="Canvas Width">W</span><input type="range" id="r-w" min="400" max="4000" value="1600" step="100"><span class="val" id="v-cw">1600</span></div>
+      <div class="row"><span class="ctrl-label" title="Canvas Height">H</span><input type="range" id="r-h" min="200" max="2400" value="900" step="100"><span class="val" id="v-ch">900</span></div>
+      <div class="row"><span class="ctrl-label" title="Detail-Resolution">R</span><input type="range" id="r-res" min="30" max="600" value="120" step="10"><span class="val" id="v-res">120</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="dot"></div>Seed<span class="chevron open">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <input type="text" id="i-seed" placeholder="random">
+        <button style="padding:3px 9px;font-size:11px;border:0.5px solid var(--border-medium);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer" onclick="randomizeSeed()">New</button>
+      </div>
+    </div>
+  </div>
+
+  <span class="ctrl-label" style="align-self:center; opacity: 0.5;">Copyright 2026 ST</span>
+
+</div>
+
+<div class="canvas-area">
+  <div class="canvas-toolbar">
+    <button class="gen-btn" onclick="generate(false)">Generate</button>
+    <button onclick="exportSVG()">Export SVG</button>
+    <span id="canvas-info"></span>
+    <span id="seed-display"></span>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark">☽</button>
+  </div>
+  <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+</div>
+
+<script>
+let darkMode=true,gradStyle='fill',animMode='drift',currentSeed=0,lastSVG='',liveTimer=null;
+document.documentElement.setAttribute('data-theme','dark');
+
+function toggleTheme(){
+  darkMode=!darkMode;
+  document.documentElement.setAttribute('data-theme',darkMode?'dark':'');
+  document.getElementById('theme-btn').textContent=darkMode?'☽':'☀';
+}
+
+function toggleSection(hdr){
+  const body=hdr.nextElementSibling;
+  const chev=hdr.querySelector('.chevron');
+  const collapsed=body.classList.toggle('collapsed');
+  chev.classList.toggle('open',!collapsed);
+}
+
+const $=id=>document.getElementById(id);
+
+const PALETTES=[
+  {name:"Sunset",         sky:"#ffd0a0",fog:"#ff8050",distant:"#2a0612",near:"#cc3322"},
+  {name:"Dusk",           sky:"#1a0a2e",fog:"#7b3fa0",distant:"#0d0015",near:"#b060e0"},
+  {name:"Blood Meridian", sky:"#ff0a00",fog:"#ff8050",distant:"#2a0612",near:"#cc3322"},
+  {name:"Void",           sky:"#050510",fog:"#1a1a3a",distant:"#000008",near:"#203060"},
+  {name:"Arctic",         sky:"#cce8ff",fog:"#aad4f0",distant:"#0a1a2a",near:"#2060a0"},
+  {name:"Ash",            sky:"#d0c8c0",fog:"#a09890",distant:"#151210",near:"#504840"},
+  {name:"Jade",           sky:"#d0f0e0",fog:"#60c890",distant:"#041008",near:"#1a6030"},
+  {name:"Ember",          sky:"#fff0c0",fog:"#ffb020",distant:"#180800",near:"#b04000"},
+  {name:"Lavender",       sky:"#f0d0ff",fog:"#c080e0",distant:"#200040",near:"#8030a0"},
+  {name:"Cyberpunk",      sky:"#ff000f",fog:"#e0f020",distant:"#30ff20",near:"#f010f0"},
+];
+
+const sw=$('palette-swatches');
+PALETTES.forEach((p,i)=>{
+  const d=document.createElement('div');
+  d.className='pal-btn';d.title=p.name;
+  d.style.background=`linear-gradient(135deg,${p.sky},${p.distant})`;
+  d.onclick=()=>{
+    $('c-sky').value=p.sky;$('c-fog').value=p.fog;
+    $('c-distant').value=p.distant;$('c-near').value=p.near;
+    document.querySelectorAll('.pal-btn').forEach(s=>s.classList.remove('active'));
+    d.classList.add('active');triggerLive();
+  };
+  if(i===0)d.classList.add('active');
+  sw.appendChild(d);
+});
+
+document.querySelectorAll('#seg-grad button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#seg-grad button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');gradStyle=btn.dataset.v;triggerLive();
+  };
+});
+
+document.querySelectorAll('#seg-anim button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#seg-anim button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');animMode=btn.dataset.v;triggerLive();
+  };
+});
+
+function linkRange(id,vid,dec,suffix=''){
+  const r=$(id),v=$(vid);
+  r.oninput=()=>{v.textContent=parseFloat(r.value).toFixed(dec)+suffix;triggerLive();};
+}
+linkRange('r-layers','v-layers',0);
+linkRange('r-spacing','v-spacing',1,'×');
+linkRange('r-voffset','v-voffset',2);
+linkRange('r-rough','v-rough',2);
+linkRange('r-scalex','v-scalex',1);
+linkRange('r-octaves','v-octaves',0);
+linkRange('r-persist','v-persist',2);
+linkRange('r-spread','v-spread',2);
+linkRange('r-tilt','v-tilt',2);
+linkRange('r-opac','v-opac',2);
+linkRange('r-res','v-res',0);
+linkRange('r-stroke','v-stroke',0);
+linkRange('r-voids','v-voids',0);
+linkRange('r-vwidth','v-vwidth',3);
+linkRange('r-vxwalk','v-vxwalk',3);
+linkRange('r-vywalk','v-vywalk',3);
+linkRange('r-adur','v-adur',1,'s');
+linkRange('r-adrift','v-adrift',0);
+linkRange('r-astag','v-astag',0,'ms');
+linkRange('r-amorph','v-amorph',1);
+$('cb-anim').onchange=triggerLive;
+$('cb-fill').onchange=triggerLive;
+$('r-w').oninput=()=>{$('v-cw').textContent=$('r-w').value;triggerLive();};
+$('r-h').oninput=()=>{$('v-ch').textContent=$('r-h').value;triggerLive();};
+$('c-sky').oninput=$('c-fog').oninput=$('c-distant').oninput=$('c-near').oninput=triggerLive;
+
+function triggerLive(){
+  if(!$('cb-live').checked)return;
+  clearTimeout(liveTimer);liveTimer=setTimeout(()=>generate(true),120);
+}
+
+function randomizeSeed(){
+  currentSeed=Math.floor(Math.random()*1e9);
+  $('i-seed').value=currentSeed;
+  generate(false);
+}
+
+function seededRng(seed){let s=seed>>>0;return()=>{s=(s^(s<<13))>>>0;s=(s^(s>>17))>>>0;s=(s^(s<<5))>>>0;return s/4294967296;};}
+function buildPerm(rng){const p=Array.from({length:256},(_,i)=>i);for(let i=255;i>0;i--){const j=Math.floor(rng()*(i+1));[p[i],p[j]]=[p[j],p[i]];}return [...p,...p];}
+function fade(t){return t*t*t*(t*(t*6-15)+10);}
+function grad(h,x){return(h&1)?-x:x;}
+function lerp(a,b,t){return a+t*(b-a);}
+function perlin1D(perm,x){const X=Math.floor(x)&255;x-=Math.floor(x);return lerp(grad(perm[perm[X]],x),grad(perm[perm[X+1]],x-1),fade(x));}
+function octave(perm,x,oct,persist){let v=0,a=1,f=1,m=0;for(let o=0;o<oct;o++){v+=perlin1D(perm,x*f)*a;m+=a;a*=persist;f*=2;}return v/m;}
+function hexRgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function lerpC(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function rgb(c){return `rgb(${c[0]},${c[1]},${c[2]})`;}
+
+function generate(isLive){
+  const seedRaw=$('i-seed').value.trim();
+  let seed;
+  if(isLive){seed=currentSeed;}
+  else{seed=seedRaw!==''?parseInt(seedRaw):Math.floor(Math.random()*1e9);currentSeed=seed;$('i-seed').value=seed;}
+  $('seed-display').textContent='seed: '+seed;
+
+  const layers=parseInt($('r-layers').value);
+  const spacing=parseFloat($('r-spacing').value);
+  const voffset=parseFloat($('r-voffset').value);
+  const stroke=parseFloat($('r-stroke').value);
+  const rough=parseFloat($('r-rough').value);
+  const scalex=parseFloat($('r-scalex').value);
+  const oct=parseInt($('r-octaves').value);
+  const persist=parseFloat($('r-persist').value);
+  const spread=parseFloat($('r-spread').value);
+  const tilt=parseFloat($('r-tilt').value);
+  const opac=parseFloat($('r-opac').value);
+  const W=parseInt($('r-w').value);
+  const H=parseInt($('r-h').value);
+  const res=parseInt($('r-res').value);
+  const voidCount=parseInt($('r-voids').value);
+  const voidSigma=parseFloat($('r-vwidth').value);
+  const xWalk=parseFloat($('r-vxwalk').value);
+  const yWalk=parseFloat($('r-vywalk').value);
+  const doAnim=$('cb-anim').checked;
+  const aDur=parseFloat($('r-adur').value);
+  const aDrift=parseFloat($('r-adrift').value);
+  const aStag=parseFloat($('r-astag').value)/1000;
+  const aMorph=parseFloat($('r-amorph').value);
+  const cSky=hexRgb($('c-sky').value);
+  const cFog=hexRgb($('c-fog').value);
+  const cDistant=hexRgb($('c-distant').value);
+  const cNear=hexRgb($('c-near').value);
+
+  const rng=seededRng(seed);
+  const perm=buildPerm(rng);
+  const offsets=Array.from({length:layers},()=>rng()*1000);
+  const phases=Array.from({length:layers},()=>rng()*100);
+
+  // --- void column initialisation ---
+  // each void: initial X center (0..1), initial floor depth (0..1 where 0=fully suppressed)
+  // then per layer we random-walk both values
+  const voidCenters=[], voidFloors=[];
+  for(let v=0;v<voidCount;v++){
+    voidCenters.push(rng()*0.8+0.1); // start position, kept away from edges
+    voidFloors.push(rng()*0.15);     // start near 0 (deep void)
+  }
+  // pre-compute per-layer state for each void column
+  // voidState[li] = array of {cx, floor} for each void
+  const voidState=[];
+  const curCx=[...voidCenters];
+  const curFloor=[...voidFloors];
+  for(let li=0;li<layers;li++){
+    const snap=[];
+    for(let v=0;v<voidCount;v++){
+      // X random walk, clamped to 0.05..0.95
+      curCx[v]+=( rng()-0.5)*xWalk*2;
+      curCx[v]=Math.max(0.05,Math.min(0.95,curCx[v]));
+      // floor random walk, clamped to 0..0.6
+      curFloor[v]+=(rng()-0.5)*yWalk*2;
+      curFloor[v]=Math.max(0,Math.min(0.6,curFloor[v]));
+      snap.push({cx:curCx[v],floor:curFloor[v]});
+    }
+    voidState.push(snap);
+  }
+
+  const defs=[],paths=[];
+  const pts=res+1;
+  const baseY=voffset*H;
+
+  for(let li=0;li<layers;li++){
+    const t=li/(layers-1);
+    const rowBase=baseY+(t*spread*H*0.5*spacing);
+    const amp=rough*H*(0.05+0.25*(1-t*0.6));
+    const xpts=[];
+    const voids=voidState[li];
+
+    for(let xi=0;xi<=pts;xi++){
+      const xn=xi/pts; // normalised 0..1
+      const nx=xn*scalex+phases[li];
+      const n=octave(perm,nx+offsets[li],oct,persist);
+
+      // compute void envelope: product of all void suppressors
+      let envelope=1.0;
+      for(let v=0;v<voidCount;v++){
+        const dx=xn-voids[v].cx;
+        const sigma=voidSigma;
+        const gauss=Math.exp(-(dx*dx)/(2*sigma*sigma));
+        // suppressor goes from 1 (outside void) toward floor (inside void)
+        envelope*=1.0-gauss*(1.0-voids[v].floor);
+      }
+
+      xpts.push(rowBase-n*amp*envelope+tilt*xn*H);
+    }
+
+    const layerColor=lerpC(cDistant,cNear,t);
+    const layerFog=lerpC(cFog,cSky,t);
+    const gid=`g${li}`;
+    let fill,fillcolor;
+
+    if(gradStyle==='fill'){
+      fill=rgb(layerColor);
+    } else if(gradStyle==='vert'){
+      defs.push(`<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${rgb(layerFog)}" stop-opacity="${(opac*0.6).toFixed(2)}"/><stop offset="100%" stop-color="${rgb(layerColor)}" stop-opacity="${opac.toFixed(2)}"/></linearGradient>`);
+      fill=`url(#${gid})`;
+    } else {
+      const cx=(0.4+rng()*0.2).toFixed(2),cy=(0.1+rng()*0.4).toFixed(2);
+      defs.push(`<radialGradient id="${gid}" cx="${cx}" cy="${cy}" r="0.7"><stop offset="0%" stop-color="${rgb(layerFog)}" stop-opacity="${(opac*0.5).toFixed(2)}"/><stop offset="100%" stop-color="${rgb(layerColor)}" stop-opacity="${opac.toFixed(2)}"/></radialGradient>`);
+      fill=`url(#${gid})`;
+    }
+    fillcolor=fill;
+    if(!$('cb-fill').checked)fill='none';
+    let d=`M 0 ${H} `;
+    for(let xi=0;xi<=pts;xi++)d+=`L ${((xi/pts)*W).toFixed(1)} ${xpts[xi].toFixed(1)} `;
+    d+=`L ${W} ${H} Z`;
+
+    let smil='';
+    if(doAnim){
+      const begin=(li*aStag).toFixed(3);
+      const dur=aDur.toFixed(1);
+      const spline='0.45 0 0.55 1';
+
+      if(animMode==='drift'||animMode==='both'){
+        smil+=`<animateTransform attributeName="transform" type="translate" `+
+          `values="0,0; 0,${-aDrift}; 0,0" `+
+          `dur="${dur}s" begin="${begin}s" repeatCount="indefinite" `+
+          `calcMode="spline" keySplines="${spline};${spline}"/>`;
+      }
+
+      if(animMode==='morph'||animMode==='both'){
+        // build morph target: same layer, shifted noise phase
+        const morphPhase=phases[li]+aMorph;
+        const xpts2=[];
+        for(let xi=0;xi<=pts;xi++){
+          const xn=xi/pts;
+          const nx2=xn*scalex+morphPhase;
+          const n2=octave(perm,nx2+offsets[li],oct,persist);
+          let env2=1.0;
+          for(let v=0;v<voidCount;v++){
+            const dx=xn-voids[v].cx;
+            const g=Math.exp(-(dx*dx)/(2*voidSigma*voidSigma));
+            env2*=1.0-g*(1.0-voids[v].floor);
+          }
+          xpts2.push(rowBase-n2*amp*env2+tilt*xn*H);
+        }
+        let d2=`M 0 ${H} `;
+        for(let xi=0;xi<=pts;xi++)d2+=`L ${((xi/pts)*W).toFixed(1)} ${xpts2[xi].toFixed(1)} `;
+        d2+=`L ${W} ${H} Z`;
+        smil+=`<animate attributeName="d" `+
+          `values="${d};${d2};${d}" `+
+          `dur="${dur}s" begin="${begin}s" repeatCount="indefinite" `+
+          `calcMode="spline" keySplines="${spline};${spline}"/>`;
+      }
+    }
+
+    paths.push(`<path id="layer-${li}" fill="${fill}" stroke="${fillcolor}" stroke-width="${stroke}" d="${d}">${smil}</path>`);
+  }
+
+  const bgClr=rgb(cSky);
+  lastSVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">\n<defs>${defs.join('')}</defs>\n<rect width="${W}" height="${H}" fill="${bgClr}"/>\n${paths.join('\n')}\n</svg>`;
+
+  const el=$('svg-canvas');
+  el.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  el.innerHTML=`<defs>${defs.join('')}</defs><rect width="${W}" height="${H}" fill="${bgClr}"/>${paths.join('\n')}`;
+  $('canvas-info').textContent=`${W} × ${H}`;
+}
+
+function exportSVG(){
+  if(!lastSVG)return;
+  const blob=new Blob([lastSVG],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`terrain-${currentSeed}.svg`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+generate(false);
+</script>
+</body>
+</html>
